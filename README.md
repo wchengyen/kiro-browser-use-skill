@@ -27,6 +27,42 @@ clicks/typing via its event bus. **Kiro is the brain**: the helper script prints
 the current page state as JSON, Kiro reads it, decides the next step, and calls the
 script again. Because Kiro does the reasoning, there is no second API key to buy.
 
+## Vision vs DOM — how decisions are made
+
+**By default this skill is 100% DOM-driven, not vision-driven.** The single criterion
+that decides which one applies:
+
+> **Is the input to Kiro's reasoning _text_ or _pixels_?**
+
+| | DOM-based (default here) | Vision-based |
+|---|---|---|
+| Input to Kiro | text: tags, attributes, ids, visible text, element indices | a rendered **screenshot** (pixels) interpreted by a multimodal model |
+| Produced by | `state` / `goto` / `click` / `type` / `search` → `get_state_as_text()` | `screenshot` → a PNG that Kiro then **reads as an image** |
+| Decision cites | `[19392]<a title=… />`, `id=s`, DOM text | "the blue button top-left", "the duck in the image", layout/colour |
+
+**Concrete, auditable rules**
+
+1. **Which function produced the data?** The state/action commands call
+   `get_browser_state_summary(include_screenshot=False)` and `get_state_as_text()` —
+   no image is ever attached. That is DOM.
+2. **Was an image actually loaded into context?** Only if Kiro opens a PNG with its
+   image-reading capability is it vision. *Taking* a screenshot but never reading it
+   is **not** vision.
+3. **What does the decision reference?** Indices / tags / ids / DOM text → DOM.
+   Something only visible as rendered pixels → vision.
+
+**Litmus test:** *"Could this decision have been made from the page's HTML/text alone,
+with the browser never drawn to pixels?"* If yes (and that is what happened) → DOM.
+
+**Grey areas** where you genuinely need vision: `<canvas>` drawings, images without
+`alt` text, text baked into pictures, image CAPTCHAs, or clicking by a pixel
+coordinate derived from a screenshot. `browser_use.Agent` mode *can* feed screenshots
+to an LLM, but this skill sets `include_screenshot=False`, so the default path carries
+no image at all.
+
+> In the bundled runoob example, every decision was made from `get_state_as_text()`
+> output — no screenshot was taken or read, so it was pure DOM.
+
 ## How it works
 
 ```

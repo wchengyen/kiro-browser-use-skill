@@ -1,0 +1,3 @@
+# Tested with browser-use 0.13.3 (Python 3.11+). Pin to avoid API drift;
+# raise deliberately after re-testing scripts/browser_step.py against a newer release.
+browser-use==0.13.3

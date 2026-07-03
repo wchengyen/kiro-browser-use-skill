@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.venv-browseruse/
+
+# Runtime / artifacts
+/tmp/kiro_browser/
+*.png
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
